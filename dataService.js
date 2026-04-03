@@ -648,16 +648,28 @@ async function runFullFetch() {
     const years = [];
     for (let y = YEARS_START; y <= YEARS_END; y++) years.push(y);
 
-    // Load any existing processed set so we can resume
+    // Load any existing processed set so we can resume an in-progress fetch
     const processedArray = loadJson(PROCESSED_FILE, []);
     const processedIds = new Set(processedArray);
-    if (processedIds.size > 0) {
-      console.log(`[resume] Skipping ${processedIds.size} already-processed filings`);
-    }
 
-    // Init/reset cache metadata (keep existing trades so we can resume)
+    // Seed processedIds from docIds already represented in the cache — this
+    // makes incremental refreshes efficient: only new filings are downloaded
+    // instead of re-processing everything from scratch.
     ensureCacheDir();
     const existingCache = loadJson(CACHE_FILE, { metadata: {}, trades: [] });
+    let seededFromCache = 0;
+    for (const trade of existingCache.trades || []) {
+      if (trade.filing?.docId && !processedIds.has(trade.filing.docId)) {
+        processedIds.add(trade.filing.docId);
+        seededFromCache++;
+      }
+    }
+
+    if (processedIds.size > 0) {
+      console.log(`[incremental] Skipping ${processedIds.size} already-processed filings (${seededFromCache} from cache, ${processedIds.size - seededFromCache} from resume file)`);
+    }
+
+    // Init cache metadata (keep existing trades — incremental mode)
     const cacheData = {
       metadata: {
         ...existingCache.metadata,
