@@ -819,18 +819,17 @@ function applySort(trades, query) {
     switch (sort) {
       case 'date':
       case 'newest':
-        return order * ((a.transaction?.tradeDate || '') < (b.transaction?.tradeDate || '') ? 1 : -1);
       case 'oldest':
         return order * ((a.transaction?.tradeDate || '') > (b.transaction?.tradeDate || '') ? 1 : -1);
       case 'amount':
       case 'largest':
-        return order * ((b.transaction?.amountMin || 0) - (a.transaction?.amountMin || 0));
+        return order * ((a.transaction?.amountMin || 0) - (b.transaction?.amountMin || 0));
       case 'name':
         return order * ((a.person?.name || '').localeCompare(b.person?.name || ''));
       case 'ticker':
         return order * ((a.asset?.ticker || '').localeCompare(b.asset?.ticker || ''));
       case 'filingdate':
-        return order * ((a.transaction?.filingDate || '') < (b.transaction?.filingDate || '') ? 1 : -1);
+        return order * ((a.transaction?.filingDate || '') > (b.transaction?.filingDate || '') ? 1 : -1);
       default:
         return 0;
     }
