@@ -23,10 +23,16 @@ app.get('/api/status', (req, res) => {
   res.json(dataService.getStatus());
 });
 
-// POST /api/refresh — manually trigger a cache refresh
+// POST /api/refresh — incrementally fetch new PTR filings (skips already-cached)
 app.post('/api/refresh', (req, res) => {
   dataService.startFetch();
-  res.json({ message: 'Cache refresh started.' });
+  res.json({ message: 'Incremental refresh started. Only new PTR filings will be fetched.' });
+});
+
+// POST /api/refresh/full — wipe cache and re-fetch everything from scratch
+app.post('/api/refresh/full', (req, res) => {
+  dataService.startFullRefetch();
+  res.json({ message: 'Full cache wipe and re-fetch started.' });
 });
 
 /*

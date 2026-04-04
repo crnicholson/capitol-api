@@ -6,6 +6,12 @@ On first startup with an empty cache, the server immediately begins fetching and
 
 ---
 
+## Warning
+
+This API is not meant to provide financial advice and please do not make any financial decisions off it. Please use at your own risk and understand, although infrequent, it can miss trades or provide incorrect information
+
+---
+
 ## Quickstart
 
 ```bash
@@ -33,6 +39,8 @@ curl -s "http://localhost:3000/api/trades?recent=25" | python3 -m json.tool
 
 ## Configuration (`.env`)
 
+These are the default settings out-of-the-box.
+
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | `3000` | HTTP port |
@@ -40,7 +48,7 @@ curl -s "http://localhost:3000/api/trades?recent=25" | python3 -m json.tool
 | `YEARS_END` | `2026` | Last year to fetch |
 | `CACHE_REFRESH_HOURS` | `0` | Hours between auto-refresh. `0` = never (only fetch if cache is empty on startup) |
 | `FETCH_DELAY_MS` | `500` | Delay between PDF downloads (ms) |
-| `PRICE_CONCURRENCY` | `3` | Parallel Yahoo Finance price lookups |
+| `PRICE_CONCURRENCY` | `3` | Parallel price lookups |
 
 ---
 
@@ -53,7 +61,8 @@ curl -s "http://localhost:3000/api/trades?recent=25" | python3 -m json.tool
   "asset": {
     "name": "Amazon.com, Inc.",
     "ticker": "AMZN",
-    "type": "ST"
+    "type": "ST",
+    "typeDescription": "Stocks (including ADRs)"
   },
   "transaction": {
     "type": "P",
@@ -107,10 +116,20 @@ curl -s http://localhost:3000/api/status | python3 -m json.tool
 
 ### `POST /api/refresh`
 
-Manually trigger a full cache refresh (runs in background).
+Incrementally fetch new PTR filings. Already-cached filings are skipped — only filings not yet in the cache are downloaded and parsed. Runs in the background.
 
 ```bash
 curl -s -X POST http://localhost:3000/api/refresh | python3 -m json.tool
+```
+
+---
+
+### `POST /api/refresh/full`
+
+Wipe the entire cache and re-fetch all PTR filings from scratch. Use this to rebuild after a corrupt cache or to pick up corrected historical data. Runs in the background.
+
+```bash
+curl -s -X POST http://localhost:3000/api/refresh/full | python3 -m json.tool
 ```
 
 ---
@@ -127,6 +146,7 @@ Main query endpoint. All parameters are optional and combinable.
 | `party` | `party=Democrat` | Party (partial match) |
 | `person` | `person=Pelosi` | Name (partial match) |
 | `ticker` | `ticker=AAPL` | Exact ticker symbol |
+| `assetType` | `assetType=ST` | Asset type code (`ST`, `CT`, `MF`, `EF`, etc.) |
 | `type` | `type=P` | Transaction type code (`P`, `S`, `E`, etc.) |
 | `category` | `category=sell` | Trade category (`buy`, `sell`, `exchange`, `gift`, etc.) |
 | `from` | `from=2025-01-01` | Trade date lower bound (ISO format) |
@@ -193,6 +213,21 @@ curl -s "http://localhost:3000/api/trades?sort=name&order=asc&limit=100" | pytho
 
 # Top 10 largest individual trades
 curl -s "http://localhost:3000/api/trades?sort=largest&limit=10" | python3 -m json.tool
+
+# All stock trades (asset type ST)
+curl -s "http://localhost:3000/api/trades?assetType=ST" | python3 -m json.tool
+
+# All cryptocurrency trades
+curl -s "http://localhost:3000/api/trades?assetType=CT" | python3 -m json.tool
+
+# All ETF purchases
+curl -s "http://localhost:3000/api/trades?assetType=EF&category=buy" | python3 -m json.tool
+
+# Incrementally fetch only new filings
+curl -s -X POST http://localhost:3000/api/refresh | python3 -m json.tool
+
+# Full wipe and re-fetch everything
+curl -s -X POST http://localhost:3000/api/refresh/full | python3 -m json.tool
 ```
 
 ---
@@ -200,7 +235,7 @@ curl -s "http://localhost:3000/api/trades?sort=largest&limit=10" | python3 -m js
 ## Transaction Action Codes
 
 Transaction action codes describe what happened in the transaction (buy, sell, gift, etc.).
-They are different from asset type symbols in `tradetypes.csv`, which describe what the asset is (`ST`, `EF`, `MF`, etc.).
+They are different from asset type codes, which describe what the asset *is* (`ST`, `EF`, `MF`, etc.).
 
 ### Codes Currently Parsed By This API
 
@@ -223,10 +258,34 @@ They are different from asset type symbols in `tradetypes.csv`, which describe w
 
 ---
 
+## Asset Type Codes
+
+Asset type codes describe what the asset *is*. Use these with the `assetType` filter parameter.
+
+| Code | Description |
+|---|---|
+| `ST` | Stocks (including ADRs) |
+| `CT` | Cryptocurrency |
+| `EF` | Exchange Traded Funds (ETF) |
+| `MF` | Mutual Funds |
+| `CS` | Corporate Securities (Bonds and Notes) |
+| `GS` | Government Securities and Agency Debt |
+| `OP` | Options |
+| `FU` | Futures |
+| `RE` | Real Estate Invest. Trust (REIT) |
+| `RS` | Restricted Stock Units (RSUs) |
+| `PS` | Stock (Not Publicly Traded) |
+| `IR` | IRA |
+| `OT` | Other |
+
+For the full list of asset type codes, see [tradetypes.csv](tradetypes.csv).
+
+---
+
 ## Data Sources
 
 - **Filings index:** `https://disclosures-clerk.house.gov/public_disc/financial-pdfs/{year}FD.zip`
 - **PTR PDFs:** `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/{year}/{docId}.pdf`
 - **Legislators (current):** `https://unitedstates.github.io/congress-legislators/legislators-current.json`
 - **Legislators (historical):** `https://unitedstates.github.io/congress-legislators/legislators-historical.json`
-- **Stock prices:** Yahoo Finance (`yahoo-finance2`)
+- **Stock prices:** Yahoo Finance chart API (via direct HTTP)

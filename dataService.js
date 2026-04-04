@@ -744,6 +744,19 @@ function startFetch() {
   runFullFetch();
 }
 
+async function runFullRefetch() {
+  // Wipe cache and processed tracking, then run a clean fetch from scratch
+  ensureCacheDir();
+  if (fs.existsSync(CACHE_FILE)) fs.unlinkSync(CACHE_FILE);
+  if (fs.existsSync(PROCESSED_FILE)) fs.unlinkSync(PROCESSED_FILE);
+  priceCache = {};
+  await runFullFetch();
+}
+
+function startFullRefetch() {
+  runFullRefetch();
+}
+
 function getStatus() {
   const cache = loadJson(CACHE_FILE, null);
   return {
@@ -794,6 +807,11 @@ function applyFilters(trades, query) {
       t.transaction?.type?.toUpperCase() === ty ||
       t.transaction?.category?.toLowerCase() === query.type.toLowerCase()
     );
+  }
+
+  if (query.assetType) {
+    const at = query.assetType.toUpperCase();
+    result = result.filter(t => t.asset?.type?.toUpperCase() === at);
   }
 
   if (query.from) {
@@ -867,4 +885,4 @@ function getTrades(query) {
   };
 }
 
-module.exports = { initialize, startFetch, getStatus, getTrades };
+module.exports = { initialize, startFetch, startFullRefetch, getStatus, getTrades };
