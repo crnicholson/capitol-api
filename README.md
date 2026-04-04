@@ -6,13 +6,27 @@ On first startup with an empty cache, the server immediately begins fetching and
 
 ---
 
-## Setup
+## Quickstart
 
 ```bash
-cp .env.example .env
-# Edit .env as needed
+git clone https://github.com/crnicholson/capitol-api.git 
+cd capitol-api
 npm install
 npm start
+```
+
+The API starts on `http://localhost:3000` by default.
+
+Verify it is running:
+
+```bash
+curl -s http://localhost:3000/api/status | python3 -m json.tool
+```
+
+Or get 25 most recent trades:
+
+```bash
+curl -s "http://localhost:3000/api/trades?recent=25" | python3 -m json.tool
 ```
 
 ---
@@ -35,7 +49,7 @@ npm start
 ```json
 {
   "id": "20011070-1",
-  "owner": "DC",
+  "owner": "DC", // DC = dependent child, SP = spouse, JT = joint
   "asset": {
     "name": "Amazon.com, Inc.",
     "ticker": "AMZN",
@@ -183,7 +197,12 @@ curl -s "http://localhost:3000/api/trades?sort=largest&limit=10" | python3 -m js
 
 ---
 
-## Transaction Type Codes
+## Transaction Action Codes
+
+Transaction action codes describe what happened in the transaction (buy, sell, gift, etc.).
+They are different from asset type symbols in `tradetypes.csv`, which describe what the asset is (`ST`, `EF`, `MF`, etc.).
+
+### Codes Currently Parsed By This API
 
 | Code | Description | Category |
 |---|---|---|
@@ -200,6 +219,7 @@ curl -s "http://localhost:3000/api/trades?sort=largest&limit=10" | python3 -m js
 | `HS` | Hard Sale | sell |
 | `HE` | Hard Exchange | exchange |
 | `HP` | Hard Purchase | buy |
+| `O` | Other | other |
 
 ---
 
