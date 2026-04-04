@@ -1,8 +1,14 @@
 # Capitol API
 
+The first free, open source, and self-hostable API to explore Congressional trades.
+
 Parses and serves US House of Representatives financial disclosure data (Periodic Transaction Reports, 2018–2026).
 
 On first startup with an empty cache, the server immediately begins fetching and parsing all PTR filings for the configured year range. Trades are saved incrementally so the server is queryable as data streams in. A restart will resume from where it left off.
+
+![image](demo.png)
+
+(*This image is from the [sister project](https://github.com/crnicholson/capitol-api-frontend) meant to display the information from the API.*)
 
 ---
 
