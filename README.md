@@ -14,7 +14,7 @@ On first startup with an empty cache, the server immediately begins fetching and
 
 ## Warning
 
-This API is not meant to provide financial advice and please do not make any financial decisions off it. Please use at your own risk and understand, although infrequent, it can miss trades or provide incorrect information
+This API is not meant to provide financial advice. Please do not make any financial decisions off it. Please use at your own risk. Although infrequent, it can miss trades or provide incorrect information
 
 ---
 
@@ -35,7 +35,7 @@ Verify it is running:
 curl -s http://localhost:3000/api/status | python3 -m json.tool
 ```
 
-Or get 25 most recent trades:
+Get 25 most recent trades:
 
 ```bash
 curl -s "http://localhost:3000/api/trades?recent=25" | python3 -m json.tool
