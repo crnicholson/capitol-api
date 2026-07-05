@@ -1,5 +1,7 @@
 # Capitol API
 
+[Try it out!](https://capitol.crnicholson.com)
+
 The first free, open source, and self-hostable API to explore Congressional trades.
 
 Parses and serves US House of Representatives financial disclosure data (Periodic Transaction Reports, 2018–2026).
@@ -19,6 +21,12 @@ This API is not meant to provide financial advice. Please do not make any financ
 ---
 
 ## Quickstart
+
+### Use the Website
+
+[This](https://capitol.crnicholson.com) is only intended to help you test the API out. You will need to host your own API when making personal projects. 
+
+### Run Locally (Recommended)
 
 ```bash
 git clone https://github.com/crnicholson/capitol-api.git 
